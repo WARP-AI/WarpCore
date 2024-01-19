@@ -241,6 +241,6 @@ class DiffusionCore(WarpCore):
             optimizer = optimizers_dict[key]
             if optimizer is not None:
                 self.save_optimizer(optimizer, f'{key}_optim{suffix}', fsdp_model=models.generator if self.config.use_fsdp else None)
-        if suffix is None and self.info.total_steps > 1 and (self.info.total_steps-1) % self.config.backup_every == 0:
+        if suffix == '' and self.info.total_steps > 1 and self.info.total_steps % self.config.backup_every == 0:
             self.save_checkpoints(models, optimizers, suffix=f"_{self.info.total_steps//1000}k")
         torch.cuda.empty_cache()
