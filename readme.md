@@ -18,8 +18,8 @@ webdataset>=0.2.79
 # In order to install the latest (beta) use
 pip install git+https://github.com/WARP-AI/WarpCore -U
 
-# if you want to install a specific version to avoid breaking changes (for example, v0.0.2), use 
-pip install git+https://github.com/WARP-AI/WarpCore@0.0.2 -U
+# if you want to install a specific version to avoid breaking changes (for example, v0.0.3), use 
+pip install git+https://github.com/WARP-AI/WarpCore@0.0.3 -U
 ```
 
 # Basic usage

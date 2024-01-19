@@ -154,7 +154,7 @@ class DiffusionCore(WarpCore):
         return loss, loss_adjusted
     
     def train(self, data: WarpCore.DataDTO, extras: ExtrasDTO, models: ModelsDTO, optimizers: OptimizersDTO, schedulers: SchedulersDTO):
-        start_iter = self.info.iter
+        start_iter = self.info.iter+1
         max_iters = self.config.updates * self.config.grad_accum_steps
         if self.is_main_node:
             print(f"STARTING AT STEP: {start_iter}/{max_iters}")
@@ -180,7 +180,7 @@ class DiffusionCore(WarpCore):
             else:
                 with models.generator.no_sync():
                     loss_adjusted.backward()
-            self.info.iter = i+1
+            self.info.iter = i
 
             # UPDATE EMA
             if models.generator_ema is not None and i % self.config.ema_iters == 0:

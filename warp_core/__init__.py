@@ -41,7 +41,7 @@ class WarpCore(ABC):
     class InfoDTO(): # not inheriting from BaseDTO, because we don't want to enforce the default fields
         wandb_run_id: str = None
         total_steps: int = 0
-        iter: int = 1
+        iter: int = 0
 
     @dataclass(frozen=True)
     class DataDTO(BaseDTO):
