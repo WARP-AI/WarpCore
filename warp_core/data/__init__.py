@@ -48,7 +48,7 @@ def setup_webdataset_path(paths, cache_path=None):
         if isinstance(paths, str):
             paths = [paths]
         for path in paths:
-            if path.endswith(".tar"):
+            if path.strip().endswith(".tar"):
                 # Avoid looking up s3 if we already have a tar file
                 tar_paths.append(path)
                 continue
