@@ -282,7 +282,7 @@ class WarpCore(ABC):
 
     def __init__(self, config_file_path=None, config_dict=None, device="cpu"):
         # Temporary setup, will be overriden by setup_ddp if required
-        self.device = device 
+        self.device = device
         self.process_id = 0
         self.is_main_node = True
         self.world_size = 1

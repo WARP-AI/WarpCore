@@ -48,6 +48,10 @@ def setup_webdataset_path(paths, cache_path=None):
         if isinstance(paths, str):
             paths = [paths]
         for path in paths:
+            if path.endswith(".tar"):
+                # Avoid looking up s3 if we already have a tar file
+                tar_paths.append(path)
+                continue
             bucket = "/".join(path.split("/")[:3])
             result = subprocess.run([f"aws s3 ls {path} --recursive | awk '{{print $4}}'"], stdout=subprocess.PIPE, shell=True, check=True)
             files = result.stdout.decode('utf-8').split()
