@@ -30,6 +30,7 @@ class WarpCore(ABC):
         checkpoint_path: str = DTO_REQUIRED
         output_path: str = DTO_REQUIRED
         checkpoint_extension: str = "safetensors"
+        dist_file_subfolder: str = ""
         # -----------------
         allow_tf32: bool = True
 
@@ -154,7 +155,7 @@ class WarpCore(ABC):
             self.device = torch.device(local_rank)
             self.world_size = world_size
 
-            dist_file_path = f"{os.getcwd()}/dist_file_{experiment_id}"
+            dist_file_path = f"{os.getcwd()}/{self.config.dist_file_subfolder}dist_file_{experiment_id}"
             # if os.path.exists(dist_file_path) and self.is_main_node:
             #     os.remove(dist_file_path)
 
