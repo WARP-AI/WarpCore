@@ -3,6 +3,7 @@ from dataclasses import dataclass, _MISSING_TYPE
 from munch import Munch
 
 EXPECTED = "___REQUIRED___"
+EXPECTED_TRAIN = "___REQUIRED_TRAIN___"
 
 # pylint: disable=invalid-field-call
 def nested_dto(x, raw=False):
@@ -10,12 +11,15 @@ def nested_dto(x, raw=False):
 
 @dataclass(frozen=True)
 class Base:
+    training: bool = None
     def __new__(cls, **kwargs):
-        setteable_fields = cls.setteable_fields()
-        mandatory_fields = cls.mandatory_fields()
+        training = kwargs.get('training', True)
+        setteable_fields = cls.setteable_fields(**kwargs)
+        mandatory_fields = cls.mandatory_fields(**kwargs)
         invalid_kwargs = [
-            {k: v} for k, v in kwargs.items() if k not in setteable_fields or v == EXPECTED
+            {k: v} for k, v in kwargs.items() if k not in setteable_fields or v == EXPECTED or (v == EXPECTED_TRAIN and training is not False)
         ]
+        print(mandatory_fields)
         assert (
             len(invalid_kwargs) == 0
         ), f"Invalid fields detected when initializing this DTO: {invalid_kwargs}.\nDeclare this field and set it to None or EXPECTED in order to make it setteable."
@@ -27,12 +31,13 @@ class Base:
 
 
     @classmethod
-    def setteable_fields(cls):
-        return [f.name for f in dataclasses.fields(cls) if f.default is None or isinstance(f.default, _MISSING_TYPE) or f.default == EXPECTED]
+    def setteable_fields(cls, **kwargs):
+        return [f.name for f in dataclasses.fields(cls) if f.default is None or isinstance(f.default, _MISSING_TYPE) or f.default == EXPECTED or f.default == EXPECTED_TRAIN]
 
     @classmethod
-    def mandatory_fields(cls):
-        return [f.name for f in dataclasses.fields(cls) if isinstance(f.default, _MISSING_TYPE) and isinstance(f.default_factory, _MISSING_TYPE) or f.default == EXPECTED]
+    def mandatory_fields(cls, **kwargs):
+        training = kwargs.get('training', True)
+        return [f.name for f in dataclasses.fields(cls) if isinstance(f.default, _MISSING_TYPE) and isinstance(f.default_factory, _MISSING_TYPE) or f.default == EXPECTED or (f.default == EXPECTED_TRAIN and training is not False)]
 
     @classmethod
     def from_dict(cls, kwargs):

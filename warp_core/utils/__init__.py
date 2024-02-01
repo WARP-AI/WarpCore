@@ -1,4 +1,4 @@
-from .base_dto import Base, nested_dto, EXPECTED
+from .base_dto import Base, nested_dto, EXPECTED, EXPECTED_TRAIN
 from .save_and_load import create_folder_if_necessary, safe_save, load_or_fail
 
 # MOVE IT SOMERWHERE ELSE
