@@ -17,7 +17,7 @@ from torch.distributed.fsdp import (
     StateDictType
 )
 
-from .utils import BaseDTO, DTO_REQUIRED
+from .utils import BaseDTO, EXPECTED
 from .utils import create_folder_if_necessary, safe_save, load_or_fail
 
 # pylint: disable=unused-argument
@@ -25,10 +25,10 @@ class WarpCore(ABC):
     # DTOs ---------------------------------------
     @dataclass(frozen=True)
     class ConfigDTO(BaseDTO):
-        experiment_id: str = DTO_REQUIRED
+        experiment_id: str = EXPECTED
         # checkpointint ---
-        checkpoint_path: str = DTO_REQUIRED
-        output_path: str = DTO_REQUIRED
+        checkpoint_path: str = EXPECTED
+        output_path: str = EXPECTED
         checkpoint_extension: str = "safetensors"
         dist_file_subfolder: str = ""
         # -----------------

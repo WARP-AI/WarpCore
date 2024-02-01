@@ -1,5 +1,5 @@
 from .. import WarpCore
-from ..utils import DTO_REQUIRED, update_weights_ema, create_folder_if_necessary
+from ..utils import EXPECTED, update_weights_ema, create_folder_if_necessary
 from abc import abstractmethod
 from dataclasses import dataclass
 import torch
@@ -24,11 +24,11 @@ class DiffusionCore(WarpCore):
     @dataclass(frozen=True)
     class ConfigDTO(WarpCore.ConfigDTO):
         # TRAINING PARAMS
-        lr: float = DTO_REQUIRED
-        grad_accum_steps: int = DTO_REQUIRED
-        batch_size: int = DTO_REQUIRED
-        updates: int = DTO_REQUIRED
-        warmup_updates: int = DTO_REQUIRED
+        lr: float = EXPECTED
+        grad_accum_steps: int = EXPECTED
+        batch_size: int = EXPECTED
+        updates: int = EXPECTED
+        warmup_updates: int = EXPECTED
         save_every: int = 500
         backup_every: int = 20000
         use_fsdp: bool = True
@@ -41,18 +41,18 @@ class DiffusionCore(WarpCore):
         # GDF setting
         gdf_target_reparametrization: TargetReparametrization = None # epsilon or x0
     
-    @dataclass() # not frozen, means that fields are mutable. Doesn't support DTO_REQUIRED
+    @dataclass() # not frozen, means that fields are mutable. Doesn't support EXPECTED
     class InfoDTO(WarpCore.InfoDTO):
         ema_loss: float = None
 
     @dataclass(frozen=True)
     class ModelsDTO(WarpCore.ModelsDTO):
-        generator : nn.Module = DTO_REQUIRED
+        generator : nn.Module = EXPECTED
         generator_ema : nn.Module = None # optional
 
     @dataclass(frozen=True)
     class OptimizersDTO(WarpCore.OptimizersDTO):
-        generator : any = DTO_REQUIRED
+        generator : any = EXPECTED
 
     @dataclass(frozen=True)
     class SchedulersDTO(WarpCore.SchedulersDTO):
@@ -60,8 +60,8 @@ class DiffusionCore(WarpCore):
 
     @dataclass(frozen=True)
     class ExtrasDTO(WarpCore.ExtrasDTO):
-        gdf: GDF = DTO_REQUIRED
-        sampling_configs: dict = DTO_REQUIRED
+        gdf: GDF = EXPECTED
+        sampling_configs: dict = EXPECTED
 
     # --------------------------------------------
     info: InfoDTO

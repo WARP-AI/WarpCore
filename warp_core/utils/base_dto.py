@@ -2,7 +2,7 @@ import dataclasses
 from dataclasses import dataclass, _MISSING_TYPE
 from munch import Munch
 
-DTO_REQUIRED = "___REQUIRED___"
+EXPECTED = "___REQUIRED___"
 
 # pylint: disable=invalid-field-call
 def nested_dto(x, raw=False):
@@ -14,11 +14,11 @@ class BaseDTO:
         setteable_fields = cls.setteable_fields()
         mandatory_fields = cls.mandatory_fields()
         invalid_kwargs = [
-            {k: v} for k, v in kwargs.items() if k not in setteable_fields or v == DTO_REQUIRED
+            {k: v} for k, v in kwargs.items() if k not in setteable_fields or v == EXPECTED
         ]
         assert (
             len(invalid_kwargs) == 0
-        ), f"Invalid fields detected when initializing this DTO: {invalid_kwargs}.\nDeclare this field and set it to None or DTO_REQUIRED in order to make it setteable."
+        ), f"Invalid fields detected when initializing this DTO: {invalid_kwargs}.\nDeclare this field and set it to None or EXPECTED in order to make it setteable."
         missing_kwargs = [f for f in mandatory_fields if f not in kwargs]
         assert (
             len(missing_kwargs) == 0
@@ -28,11 +28,11 @@ class BaseDTO:
 
     @classmethod
     def setteable_fields(cls):
-        return [f.name for f in dataclasses.fields(cls) if f.default is None or isinstance(f.default, _MISSING_TYPE) or f.default == DTO_REQUIRED]
+        return [f.name for f in dataclasses.fields(cls) if f.default is None or isinstance(f.default, _MISSING_TYPE) or f.default == EXPECTED]
 
     @classmethod
     def mandatory_fields(cls):
-        return [f.name for f in dataclasses.fields(cls) if isinstance(f.default, _MISSING_TYPE) and isinstance(f.default_factory, _MISSING_TYPE) or f.default == DTO_REQUIRED]
+        return [f.name for f in dataclasses.fields(cls) if isinstance(f.default, _MISSING_TYPE) and isinstance(f.default_factory, _MISSING_TYPE) or f.default == EXPECTED]
 
     @classmethod
     def from_dict(cls, kwargs):
