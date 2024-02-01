@@ -128,7 +128,7 @@ class WarpCore(ABC):
             print(">>> RESUMING TRAINING FROM ITER ", info_dto.total_steps)
         return info_dto
 
-    def setup_config(self, config_file_path=None, config_dict=None) -> Config:
+    def setup_config(self, config_file_path=None, config_dict=None, training=True) -> Config:
         if config_file_path is not None:
             if config_file_path.endswith(".yml"):
                 with open(config_file_path, "r", encoding="utf-8") as file:
@@ -138,10 +138,10 @@ class WarpCore(ABC):
                     loaded_config = json.load(file)
             else:
                 raise ValueError("Config file must be either a .yml or .json file")
-            return self.Config.from_dict(loaded_config)
+            return self.Config.from_dict({**loaded_config, 'training': training})
         if config_dict is not None:
-            return self.Config.from_dict(config_dict)
-        return self.Config()
+            return self.Config.from_dict({**config_dict, 'training': training})
+        return self.Config(training=training)
 
     def setup_ddp(self, experiment_id, single_thread=False):
         if not single_thread:
@@ -178,7 +178,7 @@ class WarpCore(ABC):
                 wandb.alert(title=f"Training {self.info.wandb_run_id} resumed", text=f"Training {self.info.wandb_run_id} resumed from step {self.info.total_steps}")
             else:
                 wandb.alert(title=f"Training {self.info.wandb_run_id} started", text=f"Training {self.info.wandb_run_id} started")
-    
+
     # LOAD UTILITIES ----------
     def load_model(self, model, model_id=None, full_path=None, strict=True):
         if model_id is not None and full_path is None:
@@ -280,7 +280,7 @@ class WarpCore(ABC):
                 del checkpoint
     # -----
 
-    def __init__(self, config_file_path=None, config_dict=None, device="cpu"):
+    def __init__(self, config_file_path=None, config_dict=None, device="cpu", training=True):
         # Temporary setup, will be overriden by setup_ddp if required
         self.device = device
         self.process_id = 0
@@ -288,7 +288,7 @@ class WarpCore(ABC):
         self.world_size = 1
         # ----
 
-        self.config: self.Config = self.setup_config(config_file_path, config_dict)
+        self.config: self.Config = self.setup_config(config_file_path, config_dict, training)
         self.info: self.Info = self.setup_info()
 
     def __call__(self, single_thread=False):
