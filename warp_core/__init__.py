@@ -17,23 +17,20 @@ from torch.distributed.fsdp import (
     StateDictType
 )
 
-from .utils import Base, EXPECTED
+from .utils import Base, EXPECTED, EXPECTED_TRAIN
 from .utils import create_folder_if_necessary, safe_save, load_or_fail
 
 # pylint: disable=unused-argument
 class WarpCore(ABC):
     @dataclass(frozen=True)
     class Config(Base):
-        experiment_id: str = EXPECTED
-        # checkpointint ---
-        checkpoint_path: str = EXPECTED
-        output_path: str = EXPECTED
+        experiment_id: str = EXPECTED_TRAIN
+        checkpoint_path: str = EXPECTED_TRAIN
+        output_path: str = EXPECTED_TRAIN
         checkpoint_extension: str = "safetensors"
         dist_file_subfolder: str = ""
-        # -----------------
         allow_tf32: bool = True
 
-        # wandb
         wandb_project: str = None
         wandb_entity: str = None
 
