@@ -1,5 +1,5 @@
 from .. import WarpCore
-from ..utils import EXPECTED, update_weights_ema, create_folder_if_necessary
+from ..utils import EXPECTED, EXPECTED_TRAIN, update_weights_ema, create_folder_if_necessary
 from abc import abstractmethod
 from dataclasses import dataclass
 import torch
@@ -23,11 +23,11 @@ class DiffusionCore(WarpCore):
     @dataclass(frozen=True)
     class Config(WarpCore.Config):
         # TRAINING PARAMS
-        lr: float = EXPECTED
-        grad_accum_steps: int = EXPECTED
-        batch_size: int = EXPECTED
-        updates: int = EXPECTED
-        warmup_updates: int = EXPECTED
+        lr: float = EXPECTED_TRAIN
+        grad_accum_steps: int = EXPECTED_TRAIN
+        batch_size: int = EXPECTED_TRAIN
+        updates: int = EXPECTED_TRAIN
+        warmup_updates: int = EXPECTED_TRAIN
         save_every: int = 500
         backup_every: int = 20000
         use_fsdp: bool = True
@@ -65,15 +65,6 @@ class DiffusionCore(WarpCore):
     # --------------------------------------------
     info: Info
     config: Config
-
-    # @abstractmethod
-    # def image_transforms(self):
-    #     raise NotImplementedError("This method needs to be overriden")
-    #     # return torchvision.transforms.Compose([
-    #     #     torchvision.transforms.ToTensor(),
-    #     #     torchvision.transforms.Resize(self.config.image_size, interpolation=torchvision.transforms.InterpolationMode.BILINEAR, antialias=True),
-    #     #     SmartCrop(self.config.image_size, randomize_p=0.3, randomize_q=0.2)
-    #     # ])
 
     @abstractmethod
     def encode_latents(self, batch: dict, models: Models, extras: Extras) -> torch.Tensor:
