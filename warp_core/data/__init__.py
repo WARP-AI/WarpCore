@@ -2,6 +2,7 @@ import json
 import subprocess
 import yaml
 import os
+from .bucketeer import Bucketeer
 
 class MultiFilter():
     def __init__(self, rules, default=False):
