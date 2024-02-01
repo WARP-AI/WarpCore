@@ -5,9 +5,11 @@ from pathlib import Path
 import safetensors
 import wandb
 
+
 def create_folder_if_necessary(path):
     path = "/".join(path.split("/")[:-1])
     Path(path).mkdir(parents=True, exist_ok=True)
+
 
 def safe_save(ckpt, path):
     try:
@@ -27,6 +29,7 @@ def safe_save(ckpt, path):
         safetensors.torch.save_file(ckpt, path)
     else:
         raise ValueError(f"File extension not supported: {path}")
+
 
 def load_or_fail(path, wandb_run_id=None):
     accepted_extensions = [".pt", ".ckpt", ".json", ".safetensors"]
