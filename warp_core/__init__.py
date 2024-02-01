@@ -45,8 +45,8 @@ class WarpCore(ABC):
 
     @dataclass(frozen=True)
     class Data(Base):
-        dataset: Dataset
-        dataloader: DataLoader
+        dataset: Dataset = None
+        dataloader: DataLoader  = None
         iterator: any
 
     @dataclass(frozen=True)
