@@ -17,14 +17,13 @@ from torch.distributed.fsdp import (
     StateDictType
 )
 
-from .utils import BaseDTO, EXPECTED
+from .utils import Base, EXPECTED
 from .utils import create_folder_if_necessary, safe_save, load_or_fail
 
 # pylint: disable=unused-argument
 class WarpCore(ABC):
-    # DTOs ---------------------------------------
     @dataclass(frozen=True)
-    class ConfigDTO(BaseDTO):
+    class Config(Base):
         experiment_id: str = EXPECTED
         # checkpointint ---
         checkpoint_path: str = EXPECTED
@@ -39,35 +38,35 @@ class WarpCore(ABC):
         wandb_entity: str = None
 
     @dataclass() # not frozen, means that fields are mutable
-    class InfoDTO(): # not inheriting from BaseDTO, because we don't want to enforce the default fields
+    class Info(): # not inheriting from Base, because we don't want to enforce the default fields
         wandb_run_id: str = None
         total_steps: int = 0
         iter: int = 0
 
     @dataclass(frozen=True)
-    class DataDTO(BaseDTO):
+    class Data(Base):
         dataset: Dataset
         dataloader: DataLoader
         iterator: any
 
     @dataclass(frozen=True)
-    class ModelsDTO(BaseDTO):
+    class Models(Base):
         pass
 
     @dataclass(frozen=True)
-    class OptimizersDTO(BaseDTO):
+    class Optimizers(Base):
         pass
 
     @dataclass(frozen=True)
-    class SchedulersDTO(BaseDTO):
+    class Schedulers(Base):
         pass
 
     @dataclass(frozen=True)
-    class ExtrasDTO(BaseDTO):
+    class Extras(Base):
         pass
     # ---------------------------------------
-    info: InfoDTO
-    config: ConfigDTO
+    info: Info
+    config: Config
 
     # FSDP stuff
     fsdp_defaults = {
@@ -88,48 +87,48 @@ class WarpCore(ABC):
     # OVERRIDEABLE METHODS
     
     # [optionally] setup extra stuff, will be called BEFORE the models & optimizers are setup
-    def setup_extras_pre(self) -> ExtrasDTO:
-        return self.ExtrasDTO()
+    def setup_extras_pre(self) -> Extras:
+        return self.Extras()
 
     # setup dataset & dataloader, return a dict contained dataser, dataloader and/or iterator
     @abstractmethod
-    def setup_data(self, extras: ExtrasDTO) -> DataDTO:
+    def setup_data(self, extras: Extras) -> Data:
         raise NotImplementedError("This method needs to be overriden")
 
     # return a dict with all models that are going to be used in the training
     @abstractmethod
-    def setup_models(self, extras: ExtrasDTO) -> ModelsDTO:
+    def setup_models(self, extras: Extras) -> Models:
         raise NotImplementedError("This method needs to be overriden")
 
     # return a dict with all optimizers that are going to be used in the training
     @abstractmethod
-    def setup_optimizers(self, extras: ExtrasDTO, models: ModelsDTO) -> OptimizersDTO:
+    def setup_optimizers(self, extras: Extras, models: Models) -> Optimizers:
         raise NotImplementedError("This method needs to be overriden")
 
     # [optionally] return a dict with all schedulers that are going to be used in the training
-    def setup_schedulers(self, extras: ExtrasDTO, models: ModelsDTO, optimizers: OptimizersDTO) -> SchedulersDTO:
-        return self.SchedulersDTO()
+    def setup_schedulers(self, extras: Extras, models: Models, optimizers: Optimizers) -> Schedulers:
+        return self.Schedulers()
 
     # [optionally] setup extra stuff, will be called AFTER the models & optimizers are setup
-    def setup_extras_post(self, extras: ExtrasDTO, models: ModelsDTO, optimizers: OptimizersDTO, schedulers: SchedulersDTO) -> ExtrasDTO:
-        return self.ExtrasDTO.from_dict(extras.to_dict())
+    def setup_extras_post(self, extras: Extras, models: Models, optimizers: Optimizers, schedulers: Schedulers) -> Extras:
+        return self.Extras.from_dict(extras.to_dict())
 
     # perform the training here
     @abstractmethod
-    def train(self, data: DataDTO, extras: ExtrasDTO, models: ModelsDTO, optimizers: OptimizersDTO, schedulers: SchedulersDTO):
+    def train(self, data: Data, extras: Extras, models: Models, optimizers: Optimizers, schedulers: Schedulers):
         raise NotImplementedError("This method needs to be overriden")
     # ------------
 
-    def setup_info(self, full_path=None) -> InfoDTO:
+    def setup_info(self, full_path=None) -> Info:
         if full_path is None:
             full_path = (f"{self.config.checkpoint_path}/{self.config.experiment_id}/info.json")
         info_dict = load_or_fail(full_path, wandb_run_id=None) or {}
-        info_dto = self.InfoDTO(**info_dict)
+        info_dto = self.Info(**info_dict)
         if info_dto.total_steps > 0 and self.is_main_node:
             print(">>> RESUMING TRAINING FROM ITER ", info_dto.total_steps)
         return info_dto
 
-    def setup_config(self, config_file_path=None, config_dict=None) -> ConfigDTO:
+    def setup_config(self, config_file_path=None, config_dict=None) -> Config:
         if config_file_path is not None:
             if config_file_path.endswith(".yml"):
                 with open(config_file_path, "r", encoding="utf-8") as file:
@@ -139,10 +138,10 @@ class WarpCore(ABC):
                     loaded_config = json.load(file)
             else:
                 raise ValueError("Config file must be either a .yml or .json file")
-            return self.ConfigDTO.from_dict(loaded_config)
+            return self.Config.from_dict(loaded_config)
         if config_dict is not None:
-            return self.ConfigDTO.from_dict(config_dict)
-        return self.ConfigDTO()
+            return self.Config.from_dict(config_dict)
+        return self.Config()
 
     def setup_ddp(self, experiment_id, single_thread=False):
         if not single_thread:
@@ -289,8 +288,8 @@ class WarpCore(ABC):
         self.world_size = 1
         # ----
 
-        self.config: self.ConfigDTO = self.setup_config(config_file_path, config_dict)
-        self.info: self.InfoDTO = self.setup_info()
+        self.config: self.Config = self.setup_config(config_file_path, config_dict)
+        self.info: self.Info = self.setup_info()
 
     def __call__(self, single_thread=False):
         self.setup_ddp(self.config.experiment_id, single_thread=single_thread)  # this will change the device to the CUDA rank
@@ -350,7 +349,7 @@ class WarpCore(ABC):
 
         post_extras =self.setup_extras_post(extras, models, optimizers, schedulers)
         assert post_extras is not None, "setup_extras_post() must return a DTO"
-        extras = self.ExtrasDTO.from_dict({ **extras.to_dict(),**post_extras.to_dict() })
+        extras = self.ExtrasEXPECTED.from_dict({ **extras.to_dict(),**post_extras.to_dict() })
         if self.is_main_node:
             print("**EXTRAS:**")
             print(yaml.dump({k:f"{v}" for k, v in extras.to_dict().items()}, default_flow_style=False))

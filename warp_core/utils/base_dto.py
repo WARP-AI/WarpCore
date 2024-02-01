@@ -9,7 +9,7 @@ def nested_dto(x, raw=False):
     return dataclasses.field(default_factory=lambda: x if raw else Munch.fromDict(x))
 
 @dataclass(frozen=True)
-class BaseDTO:
+class Base:
     def __new__(cls, **kwargs):
         setteable_fields = cls.setteable_fields()
         mandatory_fields = cls.mandatory_fields()
@@ -24,7 +24,7 @@ class BaseDTO:
             len(missing_kwargs) == 0
         ), f"Required fields missing initializing this DTO: {missing_kwargs}."
         return object.__new__(cls)
-        
+
 
     @classmethod
     def setteable_fields(cls):

@@ -20,9 +20,8 @@ class TargetReparametrization(Enum):
     X0 = 'x0'
 
 class DiffusionCore(WarpCore):
-    # DTOs ---------------------------------------
     @dataclass(frozen=True)
-    class ConfigDTO(WarpCore.ConfigDTO):
+    class Config(WarpCore.Config):
         # TRAINING PARAMS
         lr: float = EXPECTED
         grad_accum_steps: int = EXPECTED
@@ -42,30 +41,30 @@ class DiffusionCore(WarpCore):
         gdf_target_reparametrization: TargetReparametrization = None # epsilon or x0
     
     @dataclass() # not frozen, means that fields are mutable. Doesn't support EXPECTED
-    class InfoDTO(WarpCore.InfoDTO):
+    class Info(WarpCore.Info):
         ema_loss: float = None
 
     @dataclass(frozen=True)
-    class ModelsDTO(WarpCore.ModelsDTO):
+    class Models(WarpCore.Models):
         generator : nn.Module = EXPECTED
         generator_ema : nn.Module = None # optional
 
     @dataclass(frozen=True)
-    class OptimizersDTO(WarpCore.OptimizersDTO):
+    class Optimizers(WarpCore.Optimizers):
         generator : any = EXPECTED
 
     @dataclass(frozen=True)
-    class SchedulersDTO(WarpCore.SchedulersDTO):
+    class Schedulers(WarpCore.Schedulers):
         generator: any = None
 
     @dataclass(frozen=True)
-    class ExtrasDTO(WarpCore.ExtrasDTO):
+    class Extras(WarpCore.Extras):
         gdf: GDF = EXPECTED
         sampling_configs: dict = EXPECTED
 
     # --------------------------------------------
-    info: InfoDTO
-    config: ConfigDTO
+    info: Info
+    config: Config
 
     # @abstractmethod
     # def image_transforms(self):
@@ -77,35 +76,35 @@ class DiffusionCore(WarpCore):
     #     # ])
 
     @abstractmethod
-    def encode_latents(self, batch: dict, models: ModelsDTO, extras: ExtrasDTO) -> torch.Tensor:
+    def encode_latents(self, batch: dict, models: Models, extras: Extras) -> torch.Tensor:
         raise NotImplementedError("This method needs to be overriden")
 
     @abstractmethod
-    def decode_latents(self, latents: torch.Tensor, batch: dict, models: ModelsDTO, extras: ExtrasDTO) -> torch.Tensor:
+    def decode_latents(self, latents: torch.Tensor, batch: dict, models: Models, extras: Extras) -> torch.Tensor:
         raise NotImplementedError("This method needs to be overriden")
 
     @abstractmethod
-    def get_conditions(self, batch: dict, models: ModelsDTO, extras: ExtrasDTO, is_eval=False, is_unconditional=False):
+    def get_conditions(self, batch: dict, models: Models, extras: Extras, is_eval=False, is_unconditional=False):
         raise NotImplementedError("This method needs to be overriden")
 
     @abstractmethod
-    def webdataset_path(self, extras: ExtrasDTO):
+    def webdataset_path(self, extras: Extras):
         raise NotImplementedError("This method needs to be overriden")
 
     @abstractmethod
-    def webdataset_filters(self, extras: ExtrasDTO):
+    def webdataset_filters(self, extras: Extras):
         raise NotImplementedError("This method needs to be overriden")
     
     @abstractmethod
-    def webdataset_preprocessors(self, extras: ExtrasDTO):
+    def webdataset_preprocessors(self, extras: Extras):
         raise NotImplementedError("This method needs to be overriden")
 
     @abstractmethod
-    def sample(self, models: ModelsDTO, data: WarpCore.DataDTO, extras: ExtrasDTO):
+    def sample(self, models: Models, data: WarpCore.Data, extras: Extras):
         raise NotImplementedError("This method needs to be overriden")
     # -------------
 
-    def setup_data(self, extras: ExtrasDTO) -> WarpCore.DataDTO:
+    def setup_data(self, extras: Extras) -> WarpCore.Data:
         # SETUP DATASET
         dataset_path = self.webdataset_path(extras)
         preprocessors = self.webdataset_preprocessors(extras)
@@ -129,9 +128,9 @@ class DiffusionCore(WarpCore):
             dataset, batch_size=real_batch_size, num_workers=8, pin_memory=True
         )
 
-        return self.DataDTO(dataset=dataset, dataloader=dataloader, iterator=iter(dataloader))
+        return self.Data(dataset=dataset, dataloader=dataloader, iterator=iter(dataloader))
 
-    def forward_pass(self, data: WarpCore.DataDTO, extras: ExtrasDTO, models: ModelsDTO):
+    def forward_pass(self, data: WarpCore.Data, extras: Extras, models: Models):
         batch = next(data.iterator)
 
         with torch.no_grad():
@@ -153,7 +152,7 @@ class DiffusionCore(WarpCore):
 
         return loss, loss_adjusted
     
-    def train(self, data: WarpCore.DataDTO, extras: ExtrasDTO, models: ModelsDTO, optimizers: OptimizersDTO, schedulers: SchedulersDTO):
+    def train(self, data: WarpCore.Data, extras: Extras, models: Models, optimizers: Optimizers, schedulers: Schedulers):
         start_iter = self.info.iter+1
         max_iters = self.config.updates * self.config.grad_accum_steps
         if self.is_main_node:
@@ -227,7 +226,7 @@ class DiffusionCore(WarpCore):
     def models_to_save(self):
         return ['generator', 'generator_ema']
 
-    def save_checkpoints(self, models: ModelsDTO, optimizers: OptimizersDTO, suffix=None):
+    def save_checkpoints(self, models: Models, optimizers: Optimizers, suffix=None):
         barrier()
         suffix = '' if suffix is None else suffix
         self.save_info(self.info, suffix=suffix)
