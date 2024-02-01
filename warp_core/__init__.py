@@ -45,9 +45,9 @@ class WarpCore(ABC):
 
     @dataclass(frozen=True)
     class Data(Base):
-        dataset: Dataset = None
-        dataloader: DataLoader  = None
-        iterator: any
+        dataset: Dataset = EXPECTED
+        dataloader: DataLoader  = EXPECTED
+        iterator: any = EXPECTED
 
     @dataclass(frozen=True)
     class Models(Base):
