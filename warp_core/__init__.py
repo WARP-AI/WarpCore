@@ -140,8 +140,8 @@ class WarpCore(ABC):
             return self.Config.from_dict({**config_dict, 'training': training})
         return self.Config(training=training)
 
-    def setup_ddp(self, experiment_id, single_thread=False):
-        if not single_thread:
+    def setup_ddp(self, experiment_id, single_gpu=False):
+        if not single_gpu:
             local_rank = int(os.environ.get("SLURM_LOCALID"))
             process_id = int(os.environ.get("SLURM_PROCID"))
             world_size = int(os.environ.get("SLURM_NNODES")) * torch.cuda.device_count()
@@ -288,8 +288,8 @@ class WarpCore(ABC):
         self.config: self.Config = self.setup_config(config_file_path, config_dict, training)
         self.info: self.Info = self.setup_info()
 
-    def __call__(self, single_thread=False):
-        self.setup_ddp(self.config.experiment_id, single_thread=single_thread)  # this will change the device to the CUDA rank
+    def __call__(self, single_gpu=False):
+        self.setup_ddp(self.config.experiment_id, single_gpu=single_gpu)  # this will change the device to the CUDA rank
         self.setup_wandb()
         if self.config.allow_tf32:
             torch.backends.cuda.matmul.allow_tf32 = True
@@ -346,7 +346,7 @@ class WarpCore(ABC):
 
         post_extras =self.setup_extras_post(extras, models, optimizers, schedulers)
         assert post_extras is not None, "setup_extras_post() must return a DTO"
-        extras = self.ExtrasEXPECTED.from_dict({ **extras.to_dict(),**post_extras.to_dict() })
+        extras = self.Extras.from_dict({ **extras.to_dict(),**post_extras.to_dict() })
         if self.is_main_node:
             print("**EXTRAS:**")
             print(yaml.dump({k:f"{v}" for k, v in extras.to_dict().items()}, default_flow_style=False))
@@ -359,7 +359,7 @@ class WarpCore(ABC):
             print("**TRAINING STARTING...**")
         self.train(data, extras, models, optimizers, schedulers)
 
-        if single_thread is False:
+        if single_gpu is False:
             barrier()
             destroy_process_group()
         if self.is_main_node:
