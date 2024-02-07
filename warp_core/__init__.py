@@ -127,14 +127,14 @@ class WarpCore(ABC):
 
     def setup_config(self, config_file_path=None, config_dict=None, training=True) -> Config:
         if config_file_path is not None:
-            if config_file_path.endswith(".yml"):
+            if config_file_path.endswith(".yml") or config_file_path.endswith(".yaml"):
                 with open(config_file_path, "r", encoding="utf-8") as file:
                     loaded_config = yaml.safe_load(file)
             elif config_file_path.endswith(".json"):
                 with open(config_file_path, "r", encoding="utf-8") as file:
                     loaded_config = json.load(file)
             else:
-                raise ValueError("Config file must be either a .yml or .json file")
+                raise ValueError("Config file must be either a .yml|.yaml or .json file")
             return self.Config.from_dict({**loaded_config, 'training': training})
         if config_dict is not None:
             return self.Config.from_dict({**config_dict, 'training': training})
